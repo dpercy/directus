@@ -19,12 +19,13 @@
 define([
     'app',
     'backbone',
+    'core/t',
     'core/UIComponent',
     'core/UIView',
     'core/table/table.view',
     'core/overlays/overlays'
   ],
-  function(app, Backbone, UIComponent, UIView, TableView, Overlays) {
+  function(app, Backbone, __t, UIComponent, UIView, TableView, Overlays) {
 
   'use strict';
 
@@ -317,10 +318,10 @@ define([
 
       if(data.type) {
         if(data.type == 'embed/youtube') {
-          data.youtube = data.url;
+          data.youtube = data.embed_id;
           data.size = app.seconds_convert(data.size);
         } else if(data.type == 'embed/vimeo') {
-          data.vimeo = data.url;
+          data.vimeo = data.embed_id;
           data.size = app.seconds_convert(data.size);
         } else {
           data.size = app.bytesToSize(data.size, 0);

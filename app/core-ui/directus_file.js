@@ -163,9 +163,9 @@ define(['app', 'core/UIComponent', 'core/UIView'], function(app, UIComponent, UI
         }
 
         if(model.get('type') == 'embed/youtube') {
-          data.youtube = model.get('url');
+          data.youtube = model.get('embed_id');
         } else if(model.get('type') == 'embed/vimeo') {
-          data.vimeo = model.get('url');
+          data.vimeo = model.get('embed_id');
         }
       }
 

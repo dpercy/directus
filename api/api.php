@@ -1224,6 +1224,7 @@ $app->post("/$v/upload/link/?", function () use ($params, $requestPayload, $app,
             $app->response->setStatus(200);
             $fileData = array_merge($fileData, $linkInfo);
 
+            $result = [];
             $result[] = array(
                 'type' => $fileData['type'],
                 'name' => $fileData['name'],
@@ -1235,7 +1236,7 @@ $app->post("/$v/upload/link/?", function () use ($params, $requestPayload, $app,
                 'size' => $fileData['size'],
                 'width' => $fileData['width'],
                 'height' => $fileData['height'],
-                'url' => (isset($fileData['url'])) ? $fileData['url'] : '',
+                'embed_id' => (isset($fileData['embed_id'])) ? $fileData['embed_id'] : '',
                 'data' => (isset($fileData['data'])) ? $fileData['data'] : null,
                 'user' => $currentUser['id']
                 //'date_uploaded' => $fileData['date_uploaded'] . ' UTC',
