@@ -16,6 +16,7 @@ class EmbedManager
      * Parse a given url with all the registered providers
      * @param $url
      * @return array
+     * @throws \Exception
      */
     public function parse($url)
     {
@@ -24,6 +25,8 @@ class EmbedManager
                 return $provider->parse($url);
             }
         }
+
+        throw new \Exception('No Providers registered.');
     }
 
     /**
@@ -38,5 +41,15 @@ class EmbedManager
         }
 
         return $this->providers[$provider->getName()];
+    }
+
+    /**
+     * Get an registered provider
+     * @param $name
+     * @return ProviderInterface|null
+     */
+    public function get($name)
+    {
+        return array_key_exists($name, $this->providers) ? $this->providers[$name] : null;
     }
 }

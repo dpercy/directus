@@ -28,13 +28,21 @@ class YoutubeProvider extends AbstractProvider
             throw new \Exception(__t('x_x_id_not_detected', ['type' => __t('video'), 'service' => 'YouTube']));
         }
 
+        return $this->parseID($videoID);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function parseID($videoID)
+    {
         $defaultInfo = [
             'embed_id' => $videoID,
             'data' => $this->getThumbnail($videoID),
-            'title' => __t('x_type_x', ['service' => 'YouTube', 'type' => 'Video']).': '.$videoID,
+            'title' => __t('x_type_x', ['service' => 'YouTube', 'type' => 'Video']) . ': ' . $videoID,
             'size' => 0,
-            'name' => 'youtube_'.$videoID.'.jpg',
-            'type' => 'embed/youtube',
+            'name' => 'youtube_' . $videoID . '.jpg',
+            'type' => $this->getType(),
             'height' => 340,
             'width' => 560
         ];
@@ -42,6 +50,11 @@ class YoutubeProvider extends AbstractProvider
         return array_merge($defaultInfo, $this->fetchInfo($videoID));
     }
 
+    /**
+     * Fetch Video information
+     * @param $videoID
+     * @return array
+     */
     protected function fetchInfo($videoID)
     {
         $info = [];
@@ -91,9 +104,14 @@ class YoutubeProvider extends AbstractProvider
         return $info;
     }
 
+    /**
+     * Fetch Video thumbnail data
+     * @param $videoID
+     * @return string
+     */
     protected function getThumbnail($videoID)
     {
-        $content = file_get_contents('http://img.youtube.com/vi/'.$videoID.'/0.jpg');
+        $content = @file_get_contents('http://img.youtube.com/vi/' . $videoID . '/0.jpg');
 
         $thumbnail = '';
         if ($content) {

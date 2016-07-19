@@ -32,7 +32,7 @@ abstract class AbstractProvider implements ProviderInterface
      */
     public function parse($url)
     {
-        if (filter_var($url, FILTER_VALIDATE_URL)) {
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
             throw new \InvalidArgumentException(__t('invalid_unsupported_url'));
         }
 
@@ -52,8 +52,20 @@ abstract class AbstractProvider implements ProviderInterface
      */
     public function getName()
     {
-        return $this->name;
+        return strtolower($this->name);
     }
+
+    public function getType()
+    {
+        return 'embed/' . $this->getName();
+    }
+
+    /**
+     * Parse an embed ID
+     * @param $embedID
+     * @return array
+     */
+    abstract public function parseID($embedID);
 
     /**
      * Parsing the url

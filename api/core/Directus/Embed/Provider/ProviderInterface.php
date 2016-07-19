@@ -19,6 +19,13 @@ interface ProviderInterface
     public function parse($url);
 
     /**
+     * Parse a given embed id
+     * @param $embedID
+     * @return array
+     */
+    public function parseID($embedID);
+
+    /**
      * Get the provider name
      * @return string
      */
