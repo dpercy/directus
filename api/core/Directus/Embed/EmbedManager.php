@@ -12,6 +12,11 @@ class EmbedManager
      */
     protected $providers = [];
 
+    /**
+     * Parse a given url with all the registered providers
+     * @param $url
+     * @return array
+     */
     public function parse($url)
     {
         foreach($this->providers as $provider) {
@@ -21,6 +26,11 @@ class EmbedManager
         }
     }
 
+    /**
+     * Register a provider
+     * @param ProviderInterface $provider
+     * @return ProviderInterface
+     */
     public function register(ProviderInterface $provider)
     {
         if (!array_key_exists($provider->getName(), $this->providers)) {

@@ -6,11 +6,17 @@ class YoutubeProvider extends AbstractProvider
 {
     protected $name = 'YouTube';
 
+    /**
+     * @inheritDoc
+     */
     public function validateURL($url)
     {
         return strpos($url, 'youtube.com') !== false;
     }
 
+    /**
+     * @inheritDoc
+     */
     protected function parseURL($url)
     {
         // Get ID from URL

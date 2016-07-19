@@ -11,7 +11,7 @@ abstract class AbstractProvider implements ProviderInterface
     protected $name = 'unknown';
 
     /**
-     * Config
+     * Files Config
      * @var array
      */
     protected $config = [];
@@ -59,7 +59,8 @@ abstract class AbstractProvider implements ProviderInterface
      * Parsing the url
      * This is a method use for the extended class
      * @param $url
-     * @return mixed
+     * @return array
+     * @throws \Exception
      */
     abstract protected function parseURL($url);
 }
