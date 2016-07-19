@@ -354,7 +354,6 @@
   "argument_must_be_callable": "Argument must be callable",
   "attempting_to_authenticate_a_user_when_a_user_is_already_authenticated": "Attempting to authenticate a user when a user is already authenticated.",
 
-  "url_must_be_a_string": "URL must be a string",
   "url_x_cannot_be_parse_by_x": "URL %{url} cannot be parse by %{class}",
   "video": "Video",
   "x_x_id_not_detected": "%{service} %{type} ID not detected. Please paste the whole URL.",

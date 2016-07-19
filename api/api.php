@@ -1215,7 +1215,7 @@ $app->post("/$v/upload/link/?", function () use ($params, $requestPayload, $app,
 
     $app->response->setStatus(400);
 
-    if (isset($_POST['link']) && is_string($_POST['link'])) {
+    if (isset($_POST['link']) && filter_var($_POST['link'], FILTER_VALIDATE_URL)) {
         $fileData = array('caption'=>'','tags'=>'','location'=>'');
         $linkInfo = $Files->getLink($_POST['link']);
 

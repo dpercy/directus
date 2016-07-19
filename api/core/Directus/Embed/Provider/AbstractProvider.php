@@ -32,8 +32,8 @@ abstract class AbstractProvider implements ProviderInterface
      */
     public function parse($url)
     {
-        if (!is_string($url)) {
-            throw new \InvalidArgumentException(__t('url_must_be_a_string'));
+        if (filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new \InvalidArgumentException(__t('invalid_unsupported_url'));
         }
 
         if (!$this->validateURL($url)) {

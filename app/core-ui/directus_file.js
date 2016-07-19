@@ -146,7 +146,7 @@ define(['app', 'core/UIComponent', 'core/UIView'], function(app, UIComponent, UI
         data.thumbUrl = model.makeFileUrl(true);
       } else if (model.isNew()) {
         data.url = model.get('url') || model.get('data');
-        data.thumbUrl = model.get('thumbnailData') || model.get('url');
+        data.thumbUrl = model.get('thumbnailData') || model.get('url') || model.get('data');
       }
 
       data.name = model.get('name');

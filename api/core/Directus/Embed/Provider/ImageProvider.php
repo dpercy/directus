@@ -36,7 +36,7 @@ class ImageProvider extends AbstractProvider
     {
         $defaultInfo = [
             'provider_id' => null,
-            'type' => 'image',
+            'type' => 'image/unknown',
             'title' => '',
             'size' => 0
         ];
@@ -63,6 +63,7 @@ class ImageProvider extends AbstractProvider
         $info['title'] = $urlInfo['filename'];
         $info['name'] = $urlInfo['basename'];
         $info['size'] = isset($urlHeaders['Content-Length']) ? $urlHeaders['Content-Length'] : 0;
+        $info['type'] = $urlHeaders['Content-Type'];
         $info['width'] = $width;
         $info['height'] = $height;
         $info['data'] = $data;
