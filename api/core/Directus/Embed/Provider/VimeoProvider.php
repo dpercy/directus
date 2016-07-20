@@ -46,7 +46,10 @@ class VimeoProvider extends AbstractProvider
             'width' => 560
         ];
 
-        return array_merge($defaultInfo, $this->fetchInfo($videoID));
+        $info = array_merge($defaultInfo, $this->fetchInfo($videoID));
+        $info['html'] = $this->getCode($info);
+
+        return $info;
     }
 
     /**
@@ -102,4 +105,14 @@ class VimeoProvider extends AbstractProvider
 
         return $thumbnail;
     }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getFormatTemplate()
+    {
+        return '<iframe src="//player.vimeo.com/video/{{embed_id}}?title=0&amp;byline=0&amp;portrait=0&amp;color=7AC943" width="{{width}}" height="{{height}}" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';
+    }
+
+
 }

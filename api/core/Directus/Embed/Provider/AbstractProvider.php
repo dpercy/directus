@@ -2,6 +2,8 @@
 
 namespace Directus\Embed\Provider;
 
+use Directus\Util\StringUtils;
+
 abstract class AbstractProvider implements ProviderInterface
 {
     /**
@@ -55,9 +57,30 @@ abstract class AbstractProvider implements ProviderInterface
         return strtolower($this->name);
     }
 
+    /**
+     * Get the embed type
+     * @return string
+     */
     public function getType()
     {
         return 'embed/' . $this->getName();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getCode($data)
+    {
+        return StringUtils::replacePlaceholder($this->getFormatTemplate(), $data);
+    }
+
+    /**
+     * Get the HTML embed format template
+     * @return mixed
+     */
+    protected function getFormatTemplate()
+    {
+        return '';
     }
 
     /**

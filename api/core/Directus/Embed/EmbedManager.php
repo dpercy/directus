@@ -52,4 +52,13 @@ class EmbedManager
     {
         return array_key_exists($name, $this->providers) ? $this->providers[$name] : null;
     }
+
+    public function getByType($type)
+    {
+        preg_match('/embed\/([a-zA-Z0-9]+)/', $type, $matches);
+
+        $name = isset($matches[1]) ? $matches[1] : null;
+
+        return $name ? $this->get($name) : null;
+    }
 }

@@ -47,13 +47,17 @@ class YoutubeProvider extends AbstractProvider
             'width' => 560
         ];
 
-        return array_merge($defaultInfo, $this->fetchInfo($videoID));
+        $info = array_merge($defaultInfo, $this->fetchInfo($videoID));
+        $info['html'] = $this->getCode($info);
+
+        return $info;
     }
 
     /**
      * Fetch Video information
      * @param $videoID
      * @return array
+     * @throws \Exception
      */
     protected function fetchInfo($videoID)
     {
@@ -119,5 +123,13 @@ class YoutubeProvider extends AbstractProvider
         }
 
         return $thumbnail;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected function getFormatTemplate()
+    {
+        return '<iframe width="{{width}}" height="{{height}}" src="//www.youtube.com/embed/{{embed_id}}" frameborder="0" allowfullscreen></iframe>';
     }
 }

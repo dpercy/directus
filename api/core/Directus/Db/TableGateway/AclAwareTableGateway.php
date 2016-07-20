@@ -477,6 +477,13 @@ class AclAwareTableGateway extends TableGateway {
                 }
 
                 $row['thumbnail_url'] = $thumbnailURL . '/' . $row['id'] . '.' . $thumbnailExtension;
+
+                $embedManager = Bootstrap::get('embedManager');
+                $provider = $embedManager->getByType($row['type']);
+                $row['html'] = null;
+                if ($provider) {
+                    $row['html'] = $provider->getCode($row);
+                }
             }
 
             $filesArrayObject = new \ArrayObject($files);

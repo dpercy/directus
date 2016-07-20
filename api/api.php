@@ -1236,6 +1236,7 @@ $app->post("/$v/upload/link/?", function () use ($params, $requestPayload, $app,
                 'size' => $fileData['size'],
                 'width' => $fileData['width'],
                 'height' => $fileData['height'],
+                'html' => isset($fileData['html']) ? $fileData['html'] : null,
                 'embed_id' => (isset($fileData['embed_id'])) ? $fileData['embed_id'] : '',
                 'data' => (isset($fileData['data'])) ? $fileData['data'] : null,
                 'user' => $currentUser['id']

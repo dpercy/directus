@@ -44,6 +44,11 @@ class ImageProvider extends AbstractProvider
         return array_merge($defaultInfo, $this->fetchInfo($url));
     }
 
+    public function parseID($url)
+    {
+        return $this->parseURL($url);
+    }
+
     protected function fetchInfo($url)
     {
         $info = [];
