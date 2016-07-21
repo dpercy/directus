@@ -6,6 +6,11 @@ class VimeoProvider extends AbstractProvider
 {
     protected $name = 'Vimeo';
 
+    public function getProviderType()
+    {
+        return 'video';
+    }
+
     /**
      * @inheritDoc
      */
@@ -28,28 +33,7 @@ class VimeoProvider extends AbstractProvider
             throw new \Exception(__t('x_x_id_not_detected', ['type' => __t('video'), 'service' => 'Vimeo']));
         }
 
-        return $this->parseID($videoID);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function parseID($videoID)
-    {
-        $defaultInfo = [
-            'embed_id' => $videoID,
-            'title' => __t('x_type_x', ['service' => 'YouTube', 'type' => 'Video']) . ': ' . $videoID,
-            'size' => 0,
-            'name' => 'vimeo_' . $videoID . '.jpg',
-            'type' => 'embed/vimeo',
-            'height' => 340,
-            'width' => 560
-        ];
-
-        $info = array_merge($defaultInfo, $this->fetchInfo($videoID));
-        $info['html'] = $this->getCode($info);
-
-        return $info;
+        return $videoID;
     }
 
     /**
@@ -63,6 +47,8 @@ class VimeoProvider extends AbstractProvider
 
         $info['title'] = __t('unable_to_retrieve_x_title', ['service' => 'Vimeo']);
         $info['size'] = 0;
+        $info['width'] = 560;
+        $info['height'] = 540;
 
         // Get Data
         $url = 'http://vimeo.com/api/v2/video/' . $videoID . '.json';
@@ -113,6 +99,4 @@ class VimeoProvider extends AbstractProvider
     {
         return '<iframe src="//player.vimeo.com/video/{{embed_id}}?title=0&amp;byline=0&amp;portrait=0&amp;color=7AC943" width="{{width}}" height="{{height}}" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>';
     }
-
-
 }

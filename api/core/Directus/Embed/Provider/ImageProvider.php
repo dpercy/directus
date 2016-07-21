@@ -6,6 +6,11 @@ class ImageProvider extends AbstractProvider
 {
     protected $name = 'Image';
 
+    public function getProviderType()
+    {
+        return 'image';
+    }
+
     public function validateURL($url)
     {
         $urlHeaders = $this->getHeaders($url);

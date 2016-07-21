@@ -6,6 +6,11 @@ class YoutubeProvider extends AbstractProvider
 {
     protected $name = 'YouTube';
 
+    public function getProviderType()
+    {
+        return 'video';
+    }
+
     /**
      * @inheritDoc
      */
@@ -28,29 +33,7 @@ class YoutubeProvider extends AbstractProvider
             throw new \Exception(__t('x_x_id_not_detected', ['type' => __t('video'), 'service' => 'YouTube']));
         }
 
-        return $this->parseID($videoID);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function parseID($videoID)
-    {
-        $defaultInfo = [
-            'embed_id' => $videoID,
-            'data' => $this->getThumbnail($videoID),
-            'title' => __t('x_type_x', ['service' => 'YouTube', 'type' => 'Video']) . ': ' . $videoID,
-            'size' => 0,
-            'name' => 'youtube_' . $videoID . '.jpg',
-            'type' => $this->getType(),
-            'height' => 340,
-            'width' => 560
-        ];
-
-        $info = array_merge($defaultInfo, $this->fetchInfo($videoID));
-        $info['html'] = $this->getCode($info);
-
-        return $info;
+        return $videoID;
     }
 
     /**
@@ -87,6 +70,9 @@ class YoutubeProvider extends AbstractProvider
 
         $info['title'] = __t('unable_to_retrieve_x_title', ['service' => 'YouTube']);
         $info['size'] = 0;
+        $info['height'] = 340;
+        $info['width'] = 560;
+        $info['data'] = $this->getThumbnail($videoID);
 
         if (property_exists($content, 'items') && count($content->items) > 0) {
             $videoDataSnippet = $content->items[0]->snippet;

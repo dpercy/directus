@@ -32,6 +32,12 @@ interface ProviderInterface
     public function getName();
 
     /**
+     * Get the provider type
+     * @return string
+     */
+    public function getProviderType();
+
+    /**
      * Get the embed type
      * @return string
      */
@@ -39,6 +45,7 @@ interface ProviderInterface
 
     /**
      * Get the embed html code
+     * @param $data
      * @return string
      */
     public function getCode($data);

@@ -45,7 +45,9 @@ abstract class AbstractProvider implements ProviderInterface
             ]));
         }
 
-        return $this->parseURL($url);
+        $embedID = $this->parseURL($url);
+
+        return $this->parseID($embedID);
     }
 
     /**
@@ -88,14 +90,43 @@ abstract class AbstractProvider implements ProviderInterface
      * @param $embedID
      * @return array
      */
-    abstract public function parseID($embedID);
+    public function parseID($embedID)
+    {
+        $defaultInfo = [
+            'embed_id' => $embedID,
+            'title' => __t('x_type_x', [
+                    'service' => $this->getName(),
+                    'type' => $this->getProviderType()]) . ': ' . $embedID,
+            'size' => 0,
+            'name' => $this->getName() . '_' . $embedID . '.jpg',
+            'type' => $this->getType()
+        ];
+
+        $info = array_merge($defaultInfo, $this->fetchInfo($embedID));
+        $info['html'] = $this->getCode($info);
+
+        return $info;
+    }
 
     /**
-     * Parsing the url
+     * Get the provider type
+     * @return mixed
+     */
+    abstract public function getProviderType();
+
+    /**
+     * Parsing the url and returning the provider ID
      * This is a method use for the extended class
      * @param $url
-     * @return array
+     * @return string
      * @throws \Exception
      */
     abstract protected function parseURL($url);
+
+    /**
+     * Fetch the embed information
+     * @param $embedID
+     * @return array
+     */
+    abstract protected function fetchInfo($embedID);
 }

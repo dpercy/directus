@@ -8,7 +8,7 @@ class EmbedManager
 {
     /**
      * List of registered provider
-     * @var array
+     * @var ProviderInterface[]
      */
     protected $providers = [];
 
@@ -44,7 +44,7 @@ class EmbedManager
     }
 
     /**
-     * Get an registered provider
+     * Get a registered provider
      * @param $name
      * @return ProviderInterface|null
      */
@@ -53,6 +53,11 @@ class EmbedManager
         return array_key_exists($name, $this->providers) ? $this->providers[$name] : null;
     }
 
+    /**
+     * Get a registered provider by embed type
+     * @param $type
+     * @return ProviderInterface|null
+     */
     public function getByType($type)
     {
         preg_match('/embed\/([a-zA-Z0-9]+)/', $type, $matches);

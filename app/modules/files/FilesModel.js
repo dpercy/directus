@@ -30,7 +30,7 @@ function(app, Backbone, EntriesModel, File) {
         atts = _.clone(this.attributes);
       }
 
-      return _.omit(atts, 'thumbnailData', 'file_url', 'file_thumb_url');
+      return _.omit(atts, 'thumbnailData', 'file_url', 'file_thumb_url', 'html');
     },
 
     formatTitle: function(name) {
