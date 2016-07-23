@@ -88,18 +88,14 @@ define(['app', 'core/UIComponent', 'core/UIView'], function(app, UIComponent, UI
                   {{#if url}} \
                   <a target="_BLANK" href="{{url}}"> \
                   <div class="ui-thumbnail has-file"> \
-                    {{#if thumbUrl}} \
-                      {{#if youtube}} \
-                        <iframe width="300" height="200" src="//www.youtube.com/embed/{{youtube}}" frameborder="0" allowfullscreen></iframe> \
-                      {{else}} \
-                        {{#if vimeo}} \
-                          <iframe src="//player.vimeo.com/video/{{vimeo}}?title=0&amp;byline=0&amp;portrait=0&amp;color=7AC943" width="300" height="200" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe> \
-                        {{else}} \
-                          <img src="{{thumbUrl}}"> \
-                        {{/if}} \
-                      {{/if}} \
+                    {{#if html}} \
+                      {{{html}}} \
                     {{else}} \
-                      <div class="default-info">{{type}}</div> \
+                      {{#if thumbUrl}} \
+                         <img src="{{thumbUrl}}"> \
+                      {{else}} \
+                        <div class="default-info">{{type}}</div> \
+                      {{/if}} \
                     {{/if}} \
                   </div> \
                   </a> \
@@ -162,11 +158,7 @@ define(['app', 'core/UIComponent', 'core/UIView'], function(app, UIComponent, UI
           data.type = subtype.toUpperCase();
         }
 
-        if(model.get('type') == 'embed/youtube') {
-          data.youtube = model.get('embed_id');
-        } else if(model.get('type') == 'embed/vimeo') {
-          data.vimeo = model.get('embed_id');
-        }
+        data.html = $(model.get('html')).css({width: 300, height: 200}).prop('outerHTML');
       }
 
       return data;
