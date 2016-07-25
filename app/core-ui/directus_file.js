@@ -86,19 +86,17 @@ define(['app', 'core/UIComponent', 'core/UIView'], function(app, UIComponent, UI
                   } \
                   </style> \
                   {{#if url}} \
-                  <a target="_BLANK" href="{{url}}"> \
                   <div class="ui-thumbnail has-file"> \
                     {{#if html}} \
                       {{{html}}} \
                     {{else}} \
                       {{#if thumbUrl}} \
-                         <img src="{{thumbUrl}}"> \
+                         <a target="_BLANK" href="{{url}}"><img src="{{thumbUrl}}"></a> \
                       {{else}} \
                         <div class="default-info">{{type}}</div> \
                       {{/if}} \
                     {{/if}} \
                   </div> \
-                  </a> \
                   <div class="ui-img-details"> \
                     <span class="ui-text-hover" data-action="swap">{{t "directus_files_swap_file"}}</span> \
                   </div> \

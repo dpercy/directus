@@ -3,20 +3,10 @@
 namespace Directus\Files;
 
 use Directus\Bootstrap;
-use Directus\Embed\EmbedManager;
-use Directus\Embed\Provider\ImageProvider;
-use Directus\Embed\Provider\VimeoProvider;
-use Directus\Embed\Provider\YoutubeEmbed;
-use Directus\Embed\Provider\YoutubeProvider;
-use Directus\Filesystem\Filesystem;
-use Directus\Filesystem\FilesystemFactory;
 use Directus\Hook\Hook;
 use Directus\Db\TableGateway\DirectusSettingsTableGateway;
-use Directus\Util\ArrayUtils;
 use Directus\Util\DateUtils;
 use Directus\Util\Formatting;
-use Directus\Files\Thumbnail;
-use League\Flysystem\Config as FlysystemConfig;
 use League\Flysystem\FileNotFoundException;
 
 class Files
@@ -126,7 +116,7 @@ class Files
      */
     public function getLink($url)
     {
-        $fileData = [];
+        $info = [];
 
         // @TODO: use oEmbed
         // @TODO: better provider url validation
@@ -135,18 +125,69 @@ class Files
         // which should fallback to ImageProvider
         // instead checking for a url with 'youtube.com/watch' with v param or youtu.be/
         $embedManager = Bootstrap::get('embedManager');
-        $info = $embedManager->parse($url);
-
-        if (!$info) {
-            return $fileData;
+        try {
+            $info = $embedManager->parse($url);
+        } catch (\Exception $e) {
+            $info = $this->getImageFromURL($url);
         }
 
-        $fileData = $info;
-        $fileData['date_uploaded'] = DateUtils::now();
-        $fileData['storage_adapter'] = $this->getConfig('adapter');
-        $fileData['charset'] = '';
+        if ($info) {
+            $info['date_uploaded'] = DateUtils::now();
+            $info['storage_adapter'] = $this->getConfig('adapter');
+            $info['charset'] = isset($info['charset']) ? $info['charset'] : '';
+        }
 
-        return $fileData;
+        return $info;
+    }
+
+    /**
+     * Get Image from URL
+     *
+     * @param $url
+     * @return array
+     */
+    protected function getImageFromURL($url)
+    {
+        stream_context_set_default([
+            'http' => [
+                'method' => 'HEAD'
+            ]
+        ]);
+
+        $urlHeaders = get_headers($url, 1);
+
+        stream_context_set_default([
+            'http' => [
+                'method' => 'GET'
+            ]
+        ]);
+
+        $info = [];
+
+        $contentType = is_array($urlHeaders['Content-Type']) ? $urlHeaders['Content-Type'][0] : $urlHeaders['Content-Type'];
+        if (strpos($contentType, 'image/') === false) {
+            return $info;
+        }
+
+        $urlInfo = pathinfo($url);
+        $content = file_get_contents($url);
+        if (!$content) {
+            return $info;
+        }
+
+        list($width, $height) = getimagesizefromstring($content);
+
+        $data = 'data:' . $urlHeaders['Content-Type'] . ';base64,' . base64_encode($content);
+        $info['title'] = $urlInfo['filename'];
+        $info['name'] = $urlInfo['basename'];
+        $info['size'] = isset($urlHeaders['Content-Length']) ? $urlHeaders['Content-Length'] : 0;
+        $info['type'] = $urlHeaders['Content-Type'];
+        $info['width'] = $width;
+        $info['height'] = $height;
+        $info['data'] = $data;
+        $info['charset'] = 'binary';
+
+        return $info;
     }
 
     /**

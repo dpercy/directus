@@ -474,8 +474,7 @@ class Bootstrap {
 
         $providers = [
             \Directus\Embed\Provider\VimeoProvider::class,
-            \Directus\Embed\Provider\YoutubeProvider::class,
-            \Directus\Embed\Provider\ImageProvider::class
+            \Directus\Embed\Provider\YoutubeProvider::class
         ];
 
         $path = implode(DIRECTORY_SEPARATOR, [
