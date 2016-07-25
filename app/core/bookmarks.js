@@ -60,6 +60,15 @@ function(app, Backbone, EntriesManager, __t, Notification) {
       }
     },
 
+    addTable: function(tableModel) {
+      this.add(new Backbone.Model({
+        icon_class: '',
+        title: app.capitalize(tableModel.get('table_name')),
+        url: 'tables/' + tableModel.get('table_name'),
+        section: 'table'
+      }));
+    },
+
     addNewBookmark: function(data) {
       data.user = data.user.toString();
       if(this.findWhere(data) === undefined) {
@@ -68,7 +77,10 @@ function(app, Backbone, EntriesManager, __t, Notification) {
     },
 
     removeBookmark: function(data) {
-      data.user = data.user.toString();
+      if (data.user) {
+        data.user = data.user.toString();
+      }
+
       var model = this.findWhere(data);
 
       if(model !== undefined) {
@@ -265,6 +277,37 @@ function(app, Backbone, EntriesManager, __t, Notification) {
           app.router.loadedPreference = undefined;
           self.setActive('tables/' + collection.table.id);
         }
+      });
+
+      app.on('tables:change:attributes:hidden', function(model, attribute) {
+        if (model.get(attribute) == true) {
+          self.removeBookmark(model);
+        } else {
+          self.addBookmark(model);
+        }
+      });
+
+      app.on('tables:change:permissions', function(table, permission) {
+        if (permission.get('allow_view') > 0) {
+          self.addBookmark(table);
+        } else {
+          self.removeBookmark(table);
+        }
+      })
+    },
+
+    addBookmark: function(model) {
+      var title = app.capitalize(model.get('table_name'));
+      if (!this.collection.isBookmarked(title)) {
+        this.collection.addTable(model);
+      }
+    },
+
+    removeBookmark: function(model) {
+      // @TODO: bookmark must have an Identification attribute.
+      this.collection.removeBookmark({
+        section: 'table',
+        title: app.capitalize(model.get('table_name'))
       });
     },
 

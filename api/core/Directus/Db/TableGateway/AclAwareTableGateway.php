@@ -194,14 +194,17 @@ class AclAwareTableGateway extends TableGateway {
     }
 
     public function addOrUpdateRecordByArray(array $recordData, $tableName = null) {
+        $tableName = is_null($tableName) ? $this->table : $tableName;
         foreach($recordData as $columnName => $columnValue) {
             if(is_array($columnValue)) {
-                $table = is_null($tableName) ? $this->table : $tableName;
-                throw new SuppliedArrayAsColumnValue("Attempting to write an array as the value for column `$table`.`$columnName`.");
+                // $table = is_null($tableName) ? $this->table : $tableName;
+                throw new SuppliedArrayAsColumnValue("Attempting to write an array as the value for column `$tableName`.`$columnName`.");
             }
         }
 
-        $tableName = is_null($tableName) ? $this->table : $tableName;
+        $columns = TableSchema::getAllNonAliasTableColumns($tableName);
+        $recordData = $this->parseRecordValuesByMysqlType($recordData, $columns);
+
         $TableGateway = new self($this->acl, $tableName, $this->adapter);
         $rowExists = isset($recordData[$TableGateway->primaryKeyFieldName]);
         if($rowExists) {
@@ -211,7 +214,6 @@ class AclAwareTableGateway extends TableGateway {
             $TableGateway->updateWith($Update);
 
             Hook::run('postUpdate', [$TableGateway, $recordData, $this->adapter, $this->acl]);
-            // Hook::run('table.update.'.$tableName, [$recordData]);
         } else {
             $d = $recordData;
             unset($d['data']);
@@ -243,7 +245,6 @@ class AclAwareTableGateway extends TableGateway {
             }
 
             Hook::run('postInsert', [$TableGateway, $recordData, $this->adapter, $this->acl]);
-            // Hook::run('table.insert.'.$tableName, [$recordData]);
         }
 
         $columns = TableSchema::getAllNonAliasTableColumnNames($tableName);
@@ -286,6 +287,7 @@ class AclAwareTableGateway extends TableGateway {
             return false;
         }
 
+        Hook::run('table.drop', [$tableName]);
         Hook::run('table.drop:after', [$tableName]);
 
         // remove table privileges
@@ -557,9 +559,13 @@ class AclAwareTableGateway extends TableGateway {
         }
 
         try {
-            Hook::run('table.insert.'.$insertTable.':before', [$insertData]);
+            Hook::run('table.insert:before', [$insertTable, $insertData]);
+            Hook::run('table.insert.' . $insertTable . ':before', [$insertData]);
             $result = parent::executeInsert($insert);
-            Hook::run('table.insert.'.$insertTable.':after', [$insertData]);
+            Hook::run('table.insert', [$insertTable, $insertData]);
+            Hook::run('table.insert.' . $insertTable, [$insertData]);
+            Hook::run('table.insert:after', [$insertTable, $insertData]);
+            Hook::run('table.insert.' . $insertTable . ':after', [$insertData]);
 
             return $result;
         } catch(\Zend\Db\Adapter\Exception\InvalidQueryException $e) {
@@ -654,9 +660,13 @@ class AclAwareTableGateway extends TableGateway {
         }
 
         try {
-            Hook::run('table.update.'.$updateTable.':after', [$updateData]);
+            Hook::run('table.update:before', [$updateTable, $updateData]);
+            Hook::run('table.update.' . $updateTable . ':before', [$updateData]);
             $result = parent::executeUpdate($update);
-            Hook::run('table.update.'.$updateTable.':after', [$updateData]);
+            Hook::run('table.update', [$updateTable, $updateData]);
+            Hook::run('table.update:after', [$updateTable, $updateData]);
+            Hook::run('table.update.' . $updateTable, [$updateData]);
+            Hook::run('table.update.' . $updateTable . ':after', [$updateData]);
 
             return $result;
         } catch(\Zend\Db\Adapter\Exception\InvalidQueryException $e) {
@@ -742,9 +752,13 @@ class AclAwareTableGateway extends TableGateway {
         }
 
         try {
-            Hook::run('table.delete.'.$deleteTable.':before');
+            Hook::run('table.delete:before', [$deleteTable]);
+            Hook::run('table.delete.' . $deleteTable . ':before');
             $result = parent::executeDelete($delete);
-            Hook::run('table.delete.'.$deleteTable.':after');
+            Hook::run('table.delete', [$deleteTable]);
+            Hook::run('table.delete:after', [$deleteTable]);
+            Hook::run('table.delete.' . $deleteTable);
+            Hook::run('table.delete.' . $deleteTable . ':after');
             return $result;
         } catch(\Zend\Db\Adapter\Exception\InvalidQueryException $e) {
             if('production' !== DIRECTUS_ENV) {
@@ -753,5 +767,65 @@ class AclAwareTableGateway extends TableGateway {
             // @todo send developer warning
             throw $e;
         }
+    }
+
+    // @TODO: move parse records into an Schema-specific class
+    public function parseRecordValuesByMysqlType($record, $nonAliasSchemaColumns) {
+        foreach($nonAliasSchemaColumns as $column) {
+            $col = $column['id'];
+            if(array_key_exists($col, $record)) {
+                $record[$col] = $this->parseMysqlType($record[$col], $column['type']);
+            }
+        }
+
+        return $record;
+    }
+
+    /**
+     * Cast a php string to the same type as MySQL
+     * @param  string $mysql_data MySQL result data
+     * @param  string $mysql_type MySQL field type
+     * @return mixed              Value cast to PHP type
+     */
+    private function parseMysqlType($mysql_data, $mysql_type = null) {
+        $mysql_type = strtolower($mysql_type);
+
+        switch ($mysql_type) {
+            case null:
+                break;
+            case 'blob':
+            case 'mediumblob':
+                return base64_encode($mysql_data);
+            case 'year':
+            case 'bigint':
+            case 'smallint':
+            case 'mediumint':
+            case 'int':
+            case 'long':
+            case 'tinyint':
+                return ($mysql_data == null) ? null : (int) $mysql_data;
+            case 'float':
+                return (float) $mysql_data;
+            case 'date':
+            case 'datetime':
+                $nullDate = empty($mysql_data) || ("0000-00-00 00:00:00" == $mysql_data) || ('0000-00-00' === $mysql_data);
+                if($nullDate) {
+                    return null;
+                }
+                $date = new \DateTime($mysql_data);
+                $formatted = $date->format('Y-m-d H:i:s');
+                return $formatted;
+            case 'time':
+                return !empty($mysql_data) ? $mysql_data : null;
+            case 'char':
+            case 'varchar':
+            case 'text':
+            case 'tinytext':
+            case 'mediumtext':
+            case 'longtext':
+            case 'var_string':
+                return $mysql_data;
+        }
+        return $mysql_data;
     }
 }

@@ -63,9 +63,6 @@ class RelationalTableGateway extends AclAwareTableGateway {
 
         $recordIsNew = !array_key_exists($TableGateway->primaryKeyFieldName, $recordData);
 
-        // $hookName = sprintf('table.%s.%s:before', ($recordIsNew ? 'insert' : 'update'), $tableName);
-        // Hook::run($hookName, array($recordData));
-
         $schemaArray = TableSchema::getSchemaArray($tableName);
 
         $currentUser = AuthProvider::getUserRecord();
@@ -248,9 +245,6 @@ class RelationalTableGateway extends AclAwareTableGateway {
         // Yield record object
         $recordGateway = new AclAwareRowGateway($this->acl, $TableGateway->primaryKeyFieldName, $tableName, $this->adapter);
         $recordGateway->populate($fullRecordData, true);
-
-        // $hookName = sprintf('table.%s.%s', ($recordIsNew ? 'insert' : 'update'), $tableName);
-        // Hook::run($hookName, array($fullRecordData));
 
         return $recordGateway;
     }
@@ -719,15 +713,8 @@ class RelationalTableGateway extends AclAwareTableGateway {
             return $set;
         }
 
-        /**
-         * Fetching one item
-         */
-
-        // @todo return null and let controller throw HTTP response
-        if (0 == count($results)) {
-            // throw new \DirectusException('Item not found!',404);
-            // @todo return null and let controller handle HTTP response
-            Bootstrap::get('app')->halt(404);
+        if (!$results) {
+            return $results;
         }
 
         list($result) = $results;
@@ -748,7 +735,7 @@ class RelationalTableGateway extends AclAwareTableGateway {
 
         foreach($records as &$row) {
             foreach($schemaArray as $column) {
-                if (strtolower($column['type']) === 'datetime') {
+                if (in_array(strtolower($column['type']), ['timestamp', 'datetime'])) {
                     $columnName = $column['id'];
                     $row[$columnName] = DateUtils::convertToISOFormat($row[$columnName], 'UTC', get_user_timezone());
                 }
@@ -1109,61 +1096,6 @@ class RelationalTableGateway extends AclAwareTableGateway {
             }
         }
         return false;
-    }
-
-    public function parseRecordValuesByMysqlType($record, $nonAliasSchemaColumns) {
-        foreach($nonAliasSchemaColumns as $column) {
-            $col = $column['id'];
-            if(array_key_exists($col, $record)) {
-                $record[$col] = $this->parseMysqlType($record[$col], $column['type']);
-            }
-        }
-        return $record;
-    }
-
-    /**
-     * Cast a php string to the same type as MySQL
-     * @param  string $mysql_data MySQL result data
-     * @param  string $mysql_type MySQL field type
-     * @return mixed              Value cast to PHP type
-     */
-    private function parseMysqlType($mysql_data, $mysql_type = null) {
-        $mysql_type = strtolower($mysql_type);
-        switch ($mysql_type) {
-            case null:
-                break;
-            case 'blob':
-            case 'mediumblob':
-                return base64_encode($mysql_data);
-            case 'year':
-            case 'bigint':
-            case 'smallint':
-            case 'mediumint':
-            case 'int':
-            case 'long':
-            case 'tinyint':
-                return ($mysql_data == null) ? null : (int) $mysql_data;
-            case 'float':
-                return (float) $mysql_data;
-            case 'date':
-            case 'datetime':
-                $nullDate = empty($mysql_data) || ("0000-00-00 00:00:00" == $mysql_data) || ('0000-00-00' === $mysql_data);
-                if($nullDate) {
-                    return null;
-                }
-                $date = new \DateTime($mysql_data);
-                $formatted = $date->format('Y-m-d H:i:s');
-                return $formatted;
-            case 'char':
-            case 'varchar':
-            case 'text':
-            case 'tinytext':
-            case 'mediumtext':
-            case 'longtext':
-            case 'var_string':
-                return $mysql_data;
-        }
-        return $mysql_data;
     }
 
     /**

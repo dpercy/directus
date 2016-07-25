@@ -66,6 +66,13 @@ function(app, Backbone, Directus, BasePageView, TableModel, ColumnModel, UIManag
           app.router.removeOverlayPage(that); //, {title: 'Add new column', stretch: true}
           that.collection.add(that.model);
           that.collection.trigger('change');
+
+          // Verify whether the UI requires options to be set
+          // in order to work.
+          var ui = UIManager._getUI(data.options.get('id'));
+          if (ui.requireVariables === true) {
+            openFieldUIOptionsView(data);
+          }
         }});
       }
     },
@@ -202,8 +209,9 @@ function(app, Backbone, Directus, BasePageView, TableModel, ColumnModel, UIManag
       }
 
       //If Single_file UI, force related table to be directus_files
-      if(this.selectedUI === 'single_file') {
+      if (['single_file', 'multiple_files'].indexOf(this.selectedUI) > -1) {
         this.model.set({table_related: 'directus_files'});
+        data.hideRelatedTable = true;
       }
 
       if(['ONETOMANY', 'MANYTOMANY'].indexOf(this.selectedDataType) > -1) {
@@ -518,17 +526,7 @@ function(app, Backbone, Directus, BasePageView, TableModel, ColumnModel, UIManag
     editUI: function(e) {
       var id = e.target.getAttribute('data-id');
       var column = this.collection.get(id);
-      var model = column.options;
-      model.set({id: column.get('ui')});
-      var schema = app.schemaManager.getColumns('ui', model.id);
-      var view = new EditColumn({model: model, schema: schema});
-      app.router.overlayPage(view);
-      view.save = function() {
-        model.save(view.table.data(), {success: function() {
-          app.router.removeOverlayPage(view); //, {title: 'Add new column', stretch: true}
-        }});
-      };
-      model.fetch();
+      openFieldUIOptionsView(column);
     },
 
     editRelationship: function(e) {
@@ -857,8 +855,13 @@ function(app, Backbone, Directus, BasePageView, TableModel, ColumnModel, UIManag
 
     toggleTableAttribute: function(tableModel, attr, element) {
       var data = {};
+
       data[attr] = !tableModel.get(attr);
       tableModel.save(data);
+
+      app.trigger('tables:change:attributes', tableModel, attr);
+      app.trigger('tables:change:attributes:' + attr, tableModel, attr);
+
       if(element.hasClass('add-color')) {
         element.addClass('delete-color');
         element.removeClass('add-color');
@@ -995,14 +998,23 @@ function(app, Backbone, Directus, BasePageView, TableModel, ColumnModel, UIManag
         group_id: app.getCurrentGroup()
       }]);
       app.schemaManager.registerPreferences([tableModel.preferences.toJSON()]);
-      app.router.bookmarks.add(new Backbone.Model({
-        icon_class: '',
-        title: app.capitalize(tableModel.get('table_name')),
-        url: 'tables/' + tableModel.get('table_name'),
-        section: 'table'
-      }));
+      app.router.bookmarks.addTable(tableModel);
     }
   });
+
+  function openFieldUIOptionsView(column) {
+    var model = column.options;
+    model.set({id: column.get('ui')});
+    var schema = app.schemaManager.getColumns('ui', model.id);
+    var view = new EditColumn({model: model, schema: schema});
+    app.router.overlayPage(view);
+    view.save = function() {
+      model.save(view.table.data(), {success: function() {
+        app.router.removeOverlayPage(view);
+      }});
+    };
+    model.fetch();
+  }
 
   return SettingsTables;
 

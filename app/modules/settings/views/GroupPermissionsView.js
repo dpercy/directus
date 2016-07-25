@@ -156,6 +156,7 @@ function(app, Backbone, Handlebars, BasePageView, Widgets, __t, TableModel) {
             if(cmodel.get('table_name') == model.get('table_name') && cmodel.get('group_id') == model.get('group_id')) {
               cmodel.set(attribute);
               cmodel.save();
+              that.triggerPermissionChanged(model);
             }
           });
 
@@ -180,6 +181,7 @@ function(app, Backbone, Handlebars, BasePageView, Widgets, __t, TableModel) {
           if(fancySave) {
             that.collection.add(that.model);
           }
+          that.triggerPermissionChanged(model);
           app.schemaManager.updatePrivileges(model.get('table_name'), attributes);
         }});
       }
@@ -225,7 +227,17 @@ function(app, Backbone, Handlebars, BasePageView, Widgets, __t, TableModel) {
         }
 
         model.save();
+        this.triggerPermissionChanged(model);
     },
+
+    triggerPermissionChanged: function(model) {
+      var tableName = model.get('table_name');
+      app.schemaManager.getOrFetchTable(tableName, function(tableModel) {
+        app.schemaManager.registerPrivileges([model.toJSON()]);
+        app.trigger('tables:change:permissions', tableModel, model);
+      });
+    },
+
     // @todo: update this for newest permission model
     OldtoggleRowPermissions: function(e) {
       var $target = $(e.target).parent(),
@@ -360,6 +372,11 @@ function(app, Backbone, Handlebars, BasePageView, Widgets, __t, TableModel) {
       };
     },
 
+    updateTableList: function(showCoreTables) {
+      this.showCoreTables = showCoreTables;
+      this.render();
+    },
+
     serialize: function() {
       var collection = this.collection;
       var that = this;
@@ -408,6 +425,11 @@ function(app, Backbone, Handlebars, BasePageView, Widgets, __t, TableModel) {
       collection.forEach(function(model) {
         var permissions, read_field_blacklist,
             write_field_blacklist, data, defaultPermissions;
+
+        // @TODO: use a list of actual core tables.
+        if (that.showCoreTables !== true && model.get('table_name').indexOf('directus_') === 0) {
+          return false;
+        }
 
         data = model.toJSON();
         data.cid = model.cid;
@@ -532,6 +554,7 @@ function(app, Backbone, Handlebars, BasePageView, Widgets, __t, TableModel) {
 
     initialize: function() {
       this.selectedState = "all";
+      this.showCoreTables = false;
       this.collection.on('sync', this.render, this);
     }
   });
@@ -589,6 +612,37 @@ function(app, Backbone, Handlebars, BasePageView, Widgets, __t, TableModel) {
     }
   });
 
+  var CoreTablesSelectWidget = Backbone.Layout.extend({
+    template: Handlebars.compile('' +
+      '<div class="checkbox">' +
+      '<label for="CoreTablesSelect">{{t "show_directus_tables"}}</label><input type="checkbox" id="CoreTablesSelect" name="show-core-tables" value="1" {{#if selected}}checked="checked"{{/if}}>' +
+      '</div>'),
+
+    tagName: 'div',
+    attributes: {
+      'class': 'tool'
+    },
+
+    showCoreTables: false,
+
+    events: {
+      'change #CoreTablesSelect': function(e) {
+        this.showCoreTables = !this.showCoreTables;
+        this.baseView.updateTableList(this.showCoreTables);
+      }
+    },
+
+    serialize: function() {
+      return {
+        selected: this.showCoreTables
+      };
+    },
+
+    initialize: function(options) {
+      this.baseView = options.baseView;
+    }
+  });
+
   GroupPermissions.Page = BasePageView.extend({
     headerOptions: {
       route: {
@@ -597,9 +651,9 @@ function(app, Backbone, Handlebars, BasePageView, Widgets, __t, TableModel) {
       },
     },
     rightToolbar: function() {
-      this.statusSelect = new StatusSelectWidget({baseView: this.view});
       return [
-        this.statusSelect
+        new StatusSelectWidget({baseView: this.view}),
+        new CoreTablesSelectWidget({baseView: this.view})
       ];
     },
     afterRender: function() {

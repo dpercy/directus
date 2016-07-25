@@ -246,7 +246,7 @@ function getExtensions($currentUserGroup) {
 
     // Append relative path and filename for dynamic loading
     foreach ($extensions as &$extension) {
-        $extension = DIRECTUS_PATH . $extension . '.js';
+        $extension = ltrim($extension, '/');
     };
 
     return $extensions;
@@ -363,6 +363,7 @@ $data = array(
     'locale' => get_user_locale(),
     'localesAvailable' => parseLocalesAvailable(get_locales_available()),
     'phrases' => get_phrases(get_user_locale()),
+    'timezones' => get_timezone_list(),
     'listViews' => getListViews(),
     'messages' => getInbox(),
     'bookmarks' => getBookmarks(),
